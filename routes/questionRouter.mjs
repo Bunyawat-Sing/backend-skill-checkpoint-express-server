@@ -133,6 +133,47 @@ questionRouter.delete("/:questionId/answers", async (req, res) => {
   }
 });
 
+//vote on question
+questionRouter.post("/:questionId/vote", async (req, res) => {
+  try {
+    const questionIdFromClient = req.params.questionId;
+    const { vote } = req.body;
+    const createVote = { ...req.body };
+
+    if (vote !== 1 && vote !== -1) {
+      return res.status(400).json({
+        message: "Invalid vote value.",
+      });
+    }
+
+    const questionCheck = await connectionPool.query(
+      `SELECT id FROM questions WHERE id = $1`,
+      [questionIdFromClient]
+    );
+
+    if (questionCheck.rowCount === 0) {
+      return res.status(404).json({
+        message: "Question not found.",
+      });
+    }
+
+    await connectionPool.query(
+      `UPDATE question_votes SET vote = $1 WHERE question_id = $2 RETURNING *`,
+      [createVote.vote, questionIdFromClient]
+    );
+
+    return res.status(200).json({
+      message: "Vote on the question has been recorded successfully.",
+    });
+  } catch (error) {
+    console.error("Database error:", error);
+    return res.status(500).json({
+      message: "Unable to vote question.",
+      error: error.message,
+    });
+  }
+});
+
 //create question
 questionRouter.post("/", async (req, res) => {
   try {
