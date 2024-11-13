@@ -65,11 +65,40 @@ questionRouter.post("/:questionId/answers", async (req, res) => {
     return res.status(201).json({
       message: "Answer created successfully.",
     });
-  } catch (error) {
-    console.error("Database error:", error);
+  } catch {
     return res.status(500).json({
       message: "Unable to create an answer.",
-      error: error.stack || error.message || "Unknown error",
+    });
+  }
+});
+
+// read answer for a specific question
+questionRouter.get("/:questionId/answers", async (req, res) => {
+  try {
+    const questionIdFromClient = req.params.questionId;
+
+    const questionCheck = await connectionPool.query(
+      `SELECT id FROM questions WHERE id = $1`,
+      [questionIdFromClient]
+    );
+
+    if (questionCheck.rowCount === 0) {
+      return res.status(404).json({
+        message: "Question not found.",
+      });
+    }
+
+    const result = await connectionPool.query(
+      `SELECT id, content FROM answers WHERE question_id = $1`,
+      [questionIdFromClient]
+    );
+
+    return res.status(200).json({
+      data: result.rows,
+    });
+  } catch {
+    return res.status(500).json({
+      message: "Unable to fetch answers.",
     });
   }
 });
