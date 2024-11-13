@@ -40,7 +40,7 @@ questionRouter.get("/search", async (req, res) => {
   }
 });
 
-// create answer for a specific question
+//create answer for a specific question
 questionRouter.post("/:questionId/answers", async (req, res) => {
   try {
     const questionIdFromClient = req.params.questionId;
@@ -72,7 +72,7 @@ questionRouter.post("/:questionId/answers", async (req, res) => {
   }
 });
 
-// read answer for a specific question
+//read answer for a specific question
 questionRouter.get("/:questionId/answers", async (req, res) => {
   try {
     const questionIdFromClient = req.params.questionId;
@@ -99,6 +99,36 @@ questionRouter.get("/:questionId/answers", async (req, res) => {
   } catch {
     return res.status(500).json({
       message: "Unable to fetch answers.",
+    });
+  }
+});
+
+//delete answer
+questionRouter.delete("/:questionId/answers", async (req, res) => {
+  try {
+    const questionIdFromClient = req.params.questionId;
+
+    const questionCheck = await connectionPool.query(
+      `SELECT id FROM questions WHERE id = $1`,
+      [questionIdFromClient]
+    );
+
+    if (questionCheck.rowCount === 0) {
+      return res.status(404).json({
+        message: "Question not found.",
+      });
+    }
+
+    await connectionPool.query(`DELETE FROM answers WHERE question_id = $1`, [
+      questionIdFromClient,
+    ]);
+
+    return res.status(200).json({
+      message: "All answers for the question have been deleted successfully.",
+    });
+  } catch {
+    return res.status(500).json({
+      message: "Unable to delete answers.",
     });
   }
 });
