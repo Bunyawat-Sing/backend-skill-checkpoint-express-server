@@ -5,24 +5,27 @@ const questionRouter = Router();
 
 questionRouter.post("/", async (req, res) => {
   try {
-    const newQuestion = { ...req.body, created_at: new Date() };
+    const newQuestion = { ...req.body};
     const result = await connectionPool.query(
-      `INSERT INTO questions (question_id, title, description, category, created_at) VALUES ($1,$2,$3,$4) RETURNING id`,
+      `INSERT INTO questions (title, description, category) VALUES ($1,$2,$3) RETURNING id`,
       [
         newQuestion.title,
         newQuestion.description,
         newQuestion.category,
-        newQuestion.created_at,
       ]
     );
 
     const newQuestionId = result.rows[0].id;
-    res.status(201).json({
+    return res.status(201).json({
       message: `Question id: ${newQuestionId} has been created successfully`,
     });
-  } catch {
+  } catch (error) {
+    console.error("Database error:", error); 
     return res.status(500).json({
-      message: `Server could not create post because database connection`,
+      message: `Server could not create post due to a database error`,
+      error: error.message, 
     });
   }
 });
+
+export default questionRouter;
