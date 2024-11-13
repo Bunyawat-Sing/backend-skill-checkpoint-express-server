@@ -40,6 +40,40 @@ questionRouter.get("/search", async (req, res) => {
   }
 });
 
+// create answer for a specific question
+questionRouter.post("/:questionId/answers", async (req, res) => {
+  try {
+    const questionIdFromClient = req.params.questionId;
+    const createAnswer = { ...req.body };
+
+    const questionCheck = await connectionPool.query(
+      `SELECT id FROM questions WHERE id = $1`,
+      [questionIdFromClient]
+    );
+
+    if (questionCheck.rowCount === 0) {
+      return res.status(404).json({
+        message: "Question not found.",
+      });
+    }
+
+    await connectionPool.query(
+      `INSERT INTO answers (question_id, content) VALUES ($1, $2)`,
+      [questionIdFromClient, createAnswer.content]
+    );
+
+    return res.status(201).json({
+      message: "Answer created successfully.",
+    });
+  } catch (error) {
+    console.error("Database error:", error);
+    return res.status(500).json({
+      message: "Unable to create an answer.",
+      error: error.stack || error.message || "Unknown error",
+    });
+  }
+});
+
 //create question
 questionRouter.post("/", async (req, res) => {
   try {
