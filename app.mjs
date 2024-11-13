@@ -9,6 +9,8 @@ app.get("/test", (req, res) => {
   return res.json("Server API is working 🚀");
 });
 
+app.use("/questions", questionRouter);
+
 app.listen(port, () => {
   console.log(`Server is running at ${port}`);
 });
